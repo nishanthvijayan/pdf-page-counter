@@ -12,7 +12,7 @@ setup(name='pdf-page-counter',
       scripts=['bin/pdf-page-counter'],
       packages=['pdf-page-counter'],
       install_requires=[
-        'argparse',
-        'terminaltables'
+          'argparse',
+          'terminaltables'
       ],
       zip_safe=False)

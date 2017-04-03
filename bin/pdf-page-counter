@@ -1,68 +1,65 @@
 #!/usr/bin/env python
 
-import re
-import os
-import sys
 import argparse
+import os
+import re
+
 from terminaltables import AsciiTable
 
-rxcountpages = re.compile(r"/Type\s*/Page([^s]|$)", re.MULTILINE|re.DOTALL)
+
+rxcountpages = re.compile(r"/Type\s*/Page([^s]|$)", re.MULTILINE | re.DOTALL)
 
 
 def print_table(table_data):
-    table_data = [["File Name","Page count"]] + table_data
+    table_data = [["File Name", "Page count"]] + table_data
     ascii_table = AsciiTable(table_data)
-    ascii_table.inner_row_border=True
+    ascii_table.inner_row_border = True
     print ascii_table.table
 
 
 def count_pages(filename):
-    data = file(filename,"rb").read()
+    data = file(filename, "rb").read()
     return len(rxcountpages.findall(data))
 
 
-def recursive_search(rootDir):
-    result = []
-    page_sum = 0
-    for dirName, subdirList, fileList in os.walk(rootDir):
-        for file in fileList:
-            if file.endswith('.pdf'):
-                page_count = str(count_pages(dirName + '/' + file))
-                result.append([file, page_count])
-                page_sum += int(page_count)
-    result.append(["Total", page_sum])
-    print_table(result)
+def search(root_dir, recursive_search):
+    file_list = []
+    for (dirpath, dirnames, filenames) in os.walk(root_dir):
+        for filename in filenames:
+            if filename.endswith('.pdf'):
+                file_list.append(dirpath + '/' + filename)
+        if not recursive_search:
+            break
+    return file_list
 
 
-def top_level_search(rootDir):
-    fileList = []
-    result = []
+def display_page_sum(file_list):
     page_sum = 0
-    for (dirpath, dirnames, filenames) in os.walk(rootDir):
-        fileList.extend(filenames)
-        break
-    for file in fileList:
-        if file.endswith('.pdf'):
-            page_count = str(count_pages(rootDir + '/' + file))
-            result.append([file, page_count])
-            page_sum += int(page_count)
+    result = []
+    for file in file_list:
+        page_count = str(count_pages(file))
+        result.append([file, page_count])
+        page_sum += int(page_count)
     result.append(["Total", page_sum])
     print_table(result)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description = "Calculate sum of pages of all pdf files in a given folder")
+    parser = argparse.ArgumentParser(
+        description="Calculate sum of pages of all pdf files in a given folder"
+    )
 
-    parser.add_argument("-r", "--recursive", default=False, const=True , type=bool, nargs='?',
-        help="Recursively search for pdf files in the directory")
+    parser.add_argument("-r", "--recursive", default=False, const=True,
+                        type=bool, nargs='?',
+                        help="Recursively search subdirectories as well")
 
-    parser.add_argument("dir", default="." , type=str, nargs='?',
-        help="Directory containing pdf files")
+    parser.add_argument("dir", default=".", type=str, nargs='?',
+                        help="Directory containing pdf files")
 
     args = parser.parse_args()
 
-    should_recursive_search = bool(args.recursive)
-    if should_recursive_search:
-        recursive_search(args.dir.encode('utf-8'))
-    else:
-        top_level_search(args.dir.encode('utf-8'))
+    pdf_files = []
+    for directory in args.dir:
+        pdf_files.extend(search(directory.encode('utf-8'),
+                                bool(args.recursive)))
+    display_page_sum(pdf_files)
