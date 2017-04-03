@@ -49,17 +49,17 @@ if __name__ == '__main__':
         description="Calculate sum of pages of all pdf files in a given folder"
     )
 
-    parser.add_argument("-r", "--recursive", default=False, const=True,
-                        type=bool, nargs='?',
+    parser.add_argument("-r", "--recursive",
+                        const=True, default=False, type=bool, nargs='?',
                         help="Recursively search subdirectories as well")
 
-    parser.add_argument("dir", default=".", type=str, nargs='?',
+    parser.add_argument("dir", default=".", type=str, nargs='*',
                         help="Directory containing pdf files")
 
     args = parser.parse_args()
 
     pdf_files = []
     for directory in args.dir:
-        pdf_files.extend(search(directory.encode('utf-8'),
+        pdf_files.extend(search(directory.rstrip("/").encode('utf-8'),
                                 bool(args.recursive)))
     display_page_sum(pdf_files)
