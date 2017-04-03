@@ -3,6 +3,7 @@
 import re
 import os
 import sys
+import argparse
 
 rxcountpages = re.compile(r"/Type\s*/Page([^s]|$)", re.MULTILINE|re.DOTALL)
  
@@ -10,21 +11,42 @@ def count_pages(filename):
     data = file(filename,"rb").read()
     return len(rxcountpages.findall(data))
 
-def main(rootDir):
+def recursive_search(rootDir):
     page_sum = 0
-    # TODO: Make recursive walk an option
     for dirName, subdirList, fileList in os.walk(rootDir):
-        for infile in fileList:
-            if infile.endswith('.pdf'):
-                page_count = str(count_pages(dirName+'/'+infile))
-                print "".join([infile, " = ", page_count])
+        for file in fileList:
+            if file.endswith('.pdf'):
+                page_count = str(count_pages(dirName + '/' + file))
+                print "".join([file, " = ", page_count])
                 page_sum += int(page_count)
-    print "No: of pages: "+str(page_sum)
+    print "\nTotal No: of pages: "+ str(page_sum)
+
+def top_level_search(rootDir):
+    fileList = []
+    page_sum = 0
+    for (dirpath, dirnames, filenames) in os.walk(rootDir):
+        fileList.extend(filenames)
+        break
+    for file in fileList:
+        if file.endswith('.pdf'):
+            page_count = str(count_pages(rootDir + '/' + file))
+            print "".join([file, " = ", page_count])
+            page_sum += int(page_count)
+    print "\nTotal No: of pages: " + str(page_sum)
 
 if __name__ == '__main__':
-    if len(sys.argv)<2:
-    	# TODO: Show help when no argument provided
-        main(".".encode('utf-8'))
+    parser = argparse.ArgumentParser(description = "Calculate sum of pages of all pdf files in a given folder")
+
+    parser.add_argument("-r", "--recursive", default=False, const=True , type=bool, nargs='?',
+        help="Recursively search for pdf files in the directory")
+
+    parser.add_argument("dir", default="." , type=str, nargs='?',
+        help="Directory containing pdf files")
+
+    args = parser.parse_args()
+
+    should_recursive_search = bool(args.recursive)
+    if should_recursive_search:
+        recursive_search(args.dir.encode('utf-8'))
     else:
-        main(sys.argv[1].encode('utf-8'))
-        
+        top_level_search(args.dir.encode('utf-8'))
