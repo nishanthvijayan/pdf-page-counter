@@ -18,8 +18,10 @@ def print_table(table_data):
 
 
 def count_pages(filename):
+
     data = open(filename, "rb").read()
     return len(rxcountpages.findall(str(data)))
+
 
 
 def search(root_dir, recursive_search):
@@ -57,8 +59,13 @@ if __name__ == '__main__':
                         help="Directory containing pdf files")
 
     args = parser.parse_args()
-
+    
     pdf_files = []
     for directory in args.dir:
-        pdf_files.extend(search(directory.rstrip("/").encode('utf-8'), bool(args.recursive)))
+        if directory.endswith(".pdf"):
+            pdf_files.append("./"+directory)
+        else :
+            pdf_files.extend(search(directory.rstrip("/").encode('utf-8'), bool(args.recursive)))
+
+        
     display_page_sum(pdf_files)
