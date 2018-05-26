@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+from __future__ import division, print_function
 import argparse
 import os
 import re
@@ -14,20 +14,22 @@ def print_table(table_data):
     table_data = [["File Name", "Page count"]] + table_data
     ascii_table = AsciiTable(table_data)
     ascii_table.inner_row_border = True
-    print ascii_table.table
+    print (ascii_table.table)
 
 
 def count_pages(filename):
-    data = file(filename, "rb").read()
-    return len(rxcountpages.findall(data))
+
+    data = open(filename, "rb").read()
+    return len(rxcountpages.findall(str(data)))
+
 
 
 def search(root_dir, recursive_search):
     file_list = []
     for (dirpath, dirnames, filenames) in os.walk(root_dir):
         for filename in filenames:
-            if filename.endswith('.pdf'):
-                file_list.append(dirpath + '/' + filename)
+            if filename.endswith(b'.pdf'):
+                file_list.append(dirpath.decode('utf-8') + '/' + filename.decode('utf-8'))
         if not recursive_search:
             break
     return file_list
@@ -57,9 +59,13 @@ if __name__ == '__main__':
                         help="Directory containing pdf files")
 
     args = parser.parse_args()
-
+    
     pdf_files = []
     for directory in args.dir:
-        pdf_files.extend(search(directory.rstrip("/").encode('utf-8'),
-                                bool(args.recursive)))
+        if directory.endswith(".pdf"):
+            pdf_files.append("./"+directory)
+        else :
+            pdf_files.extend(search(directory.rstrip("/").encode('utf-8'), bool(args.recursive)))
+
+        
     display_page_sum(pdf_files)
